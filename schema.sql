@@ -13,25 +13,22 @@ CREATE TABLE weather (
   id SERIAL PRIMARY KEY,
   forecast VARCHAR(255),
   time VARCHAR (255),
-  latitude NUMERIC(10, 7),
-  longitude NUMERIC(10,7),
   location_id INTEGER NOT NULL REFERENCES locations(id),
   created_at BIGINT
 );
 
 CREATE TABLE events (
   id SERIAL PRIMARY KEY,
+  search_query VARCHAR(255),
   name VARCHAR(255),
   event_date VARCHAR(255),
   link VARCHAR(255),
   summary VARCHAR(50000),
-  latitude NUMERIC(10, 7),
-  longitude NUMERIC(10,7),
   location_id INTEGER NOT NULL REFERENCES locations(id),
   created_at BIGINT
 );
 
-CREATE TABLE yelp(
+CREATE TABLE yelps(
   id SERIAL PRIMARY KEY,
   name VARCHAR(255),
   image_url VARCHAR(255),
