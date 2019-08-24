@@ -4,8 +4,8 @@ CREATE TABLE locations (
   id SERIAL PRIMARY KEY,
   search_query VARCHAR(255),
   formatted_query VARCHAR(255),
-  latitude NUMERIC(10, 7),
-  longitude NUMERIC(10, 7),
+  latitude NUMERIC(20, 14),
+  longitude NUMERIC(20, 14),
   region_code CHAR(2),
   created_at BIGINT
 );
@@ -31,10 +31,10 @@ CREATE TABLE events (
 CREATE TABLE yelps (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255),
-  image_url VARCHAR(255),
+  image_url VARCHAR(1000),
   price CHAR(5),
   rating NUMERIC(2, 1),
-  url VARCHAR(255),
+  url VARCHAR(1000),
   location_id INTEGER NOT NULL REFERENCES locations(id),
   created_at BIGINT
 );
@@ -45,7 +45,7 @@ CREATE TABLE movies (
   overview VARCHAR(1000),
   average_votes NUMERIC(8, 4),
   total_votes INTEGER,
-  image_url VARCHAR(255),
+  image_url VARCHAR(1000),
   popularity NUMERIC(8, 4),
   released_on CHAR(10),
   region_code CHAR(2) NOT NULL,
