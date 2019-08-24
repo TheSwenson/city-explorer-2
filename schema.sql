@@ -27,7 +27,7 @@ CREATE TABLE events (
   created_at BIGINT
 );
 
-CREATE TABLE yelps(
+CREATE TABLE yelps (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255),
   image_url VARCHAR(255),
