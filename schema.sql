@@ -19,7 +19,6 @@ CREATE TABLE weather (
 
 CREATE TABLE events (
   id SERIAL PRIMARY KEY,
-  search_query VARCHAR(255),
   name VARCHAR(255),
   event_date VARCHAR(255),
   link VARCHAR(255),
