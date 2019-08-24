@@ -88,8 +88,7 @@
   function onYelpHit(results, request, response) {
     if (Number(results.rows[0].created_at) + CACHE_MAX_AGE.YELPS < Date.now()) {
       console.log('Clearing yelp cache');
-      deleteFrom('yelps').where('location_id').are(results.rows[0].location_id);
-      onYelpMiss(request.query.data, response);
+      deleteFrom('yelps').where('location_id').are(results.rows[0].location_id).then(() => onYelpMiss(request.query.data, response));
     } else {
       response.send(results.rows);
     }
@@ -116,8 +115,7 @@
   function onMoviesHit(results, request, response) {
     if (Number(results.rows[0].created_at) + CACHE_MAX_AGE.MOVIES < Date.now()) {
       console.log('Clearing Movie cache...');
-      deleteFrom('movies').where('region_code').are(results.rows[0].region_code);
-      onMoviesMiss(request.query.data, response);
+      deleteFrom('movies').where('region_code').are(results.rows[0].region_code).then(() => onMoviesMiss(request.query.data, response));
     } else {
       response.send(results.rows);
     }
@@ -145,8 +143,7 @@
   function onEventsHit(results, request, response) {
     if (Number(results.rows[0].created_at) + CACHE_MAX_AGE.EVENTS < Date.now()) {
       console.log('Clearing Events cache...');
-      deleteFrom('events').where('location_id').are(results.rows[0].location_id);
-      onEventsMiss(request.query.data, response);
+      deleteFrom('events').where('location_id').are(results.rows[0].location_id).then(() => onEventsMiss(request.query.data, response));
     } else {
       response.send(results.rows);
     }
@@ -173,8 +170,7 @@
   function onWeatherHit(results, request, response) {
     if (Number(results.rows[0].created_at) + CACHE_MAX_AGE.WEATHER < Date.now()) {
       console.log('Clearing Weather cache...');
-      deleteFrom('weather').where('location_id').are(results.rows[0].location_id);
-      onWeatherMiss(request.query.data, response);
+      deleteFrom('weather').where('location_id').are(results.rows[0].location_id).then(() => onWeatherMiss(request.query.data, response));
     } else {
       response.send(results.rows);
     }
