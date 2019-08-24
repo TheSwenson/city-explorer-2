@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS locations, weather, events, yelps, movies CASCADE;
+DROP TABLE IF EXISTS locations, weather, events, yelps, movies, trails CASCADE;
 
 CREATE TABLE locations (
   id SERIAL PRIMARY KEY,
@@ -23,7 +23,7 @@ CREATE TABLE events (
   name VARCHAR(255),
   event_date VARCHAR(255),
   link VARCHAR(255),
-  summary VARCHAR(50000),
+  summary VARCHAR(10000),
   location_id INTEGER NOT NULL REFERENCES locations(id),
   created_at BIGINT
 );
@@ -42,7 +42,7 @@ CREATE TABLE yelps (
 CREATE TABLE movies (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255),
-  overview VARCHAR(1000),
+  overview VARCHAR(5000),
   average_votes NUMERIC(8, 4),
   total_votes INTEGER,
   image_url VARCHAR(1000),
@@ -50,4 +50,20 @@ CREATE TABLE movies (
   released_on CHAR(10),
   region_code CHAR(2) NOT NULL,
   created_at BIGINT
+);
+
+CREATE TABLE trails (
+  id SERIAL PRIMARY KEY,
+  created_at BIGINT,
+  name VARCHAR(255),
+  location VARCHAR(255),
+  length FLOAT,
+  stars FLOAT,
+  star_votes INTEGER,
+  summary VARCHAR(10000),
+  trail_url VARCHAR(1000),
+  conditions VARCHAR(500),
+  condition_date VARCHAR(10),
+  condition_time VARCHAR(10),
+  location_id INTEGER NOT NULL REFERENCES locations(id)
 );

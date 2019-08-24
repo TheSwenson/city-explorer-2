@@ -16,7 +16,8 @@
     WEATHER: 60000,
     EVENTS: 60000,
     MOVIES: 60000,
-    YELPS: 60000
+    YELPS: 60000,
+    TRAILS: 60000
   };
 
   app.get('/location', handleLocationRoute);
@@ -29,6 +30,8 @@
 
   app.get('/yelp', handleYelpRoute);
 
+  app.get('/trails', handleTrailsRoute);
+
   app.get('*', (req, res) => {
     res.status(404).send({ status: 404, responseText: 'This item could not be found...' });
   });
@@ -39,6 +42,32 @@
   });
 
   //Functions below.
+
+  function handleTrailsRoute(request, response) {
+    forRequest(request, response).selectFrom('trails').where('location_id').are(request.query.data.id).then(
+      onTrailsMiss,
+      onTrailsHit
+    );
+  }
+
+  function onTrailsMiss(request, response) {
+    superagent.get(`https://www.hikingproject.com/data/get-trails?lat=${request.query.data.latitude}&lon=${request.query.data.longitude}&maxDistance=10&key=${process.env.TRAILS_API_KEY}`)
+      .then(trailsData => {
+        const trails = trailsData.body.trails.map(trail => new Trail(request.query.data.id, trail));
+        trails.forEach(trail => trail.save());
+        response.send(trails);
+      })
+      .catch(getErrorHandler(response));
+  }
+
+  function onTrailsHit(results, request, response) {
+    if (Number(results.rows[0].created_at) + CACHE_MAX_AGE.TRAILS < Date.now()) {
+      console.log('Clearing trails cache');
+      deleteFrom('trails').where('location_id').are(results.rows[0].location_id).then(() => onTrailsMiss(request, response));
+    } else {
+      response.send(results.rows);
+    }
+  }
 
   function handleLocationRoute(request, response) {
     forRequest(request, response).selectFrom('locations').where('search_query').are(request.query.data).then(
@@ -69,17 +98,17 @@
 
   function handleYelpRoute(request, response) {
     forRequest(request, response).selectFrom('yelps').where('location_id').are(request.query.data.id).then(
-      () => onYelpMiss(request.query.data, response),
+      onYelpMiss,
       onYelpHit
     );
   }
 
-  function onYelpMiss(location, response) {
+  function onYelpMiss(request, response) {
     superagent
-      .get(`https://api.yelp.com/v3/businesses/search?latitude=${location.latitude}&longitude=${location.longitude}`)
+      .get(`https://api.yelp.com/v3/businesses/search?latitude=${request.query.data.latitude}&longitude=${request.query.data.longitude}`)
       .set('Authorization', `Bearer ${process.env.YELP_API_KEY}`)
       .then(yelpData => {
-        const biddnesses = yelpData.body.businesses.map(biddness => new YelpLocation(location.id, biddness));
+        const biddnesses = yelpData.body.businesses.map(biddness => new YelpLocation(request.query.data.id, biddness));
         biddnesses.forEach(biddness => biddness.save());
         response.send(biddnesses);
       });
@@ -88,7 +117,7 @@
   function onYelpHit(results, request, response) {
     if (Number(results.rows[0].created_at) + CACHE_MAX_AGE.YELPS < Date.now()) {
       console.log('Clearing yelp cache');
-      deleteFrom('yelps').where('location_id').are(results.rows[0].location_id).then(() => onYelpMiss(request.query.data, response));
+      deleteFrom('yelps').where('location_id').are(results.rows[0].location_id).then(() => onYelpMiss(request, response));
     } else {
       response.send(results.rows);
     }
@@ -207,6 +236,9 @@
     this.name = eventData.name.text ? eventData.name.text : eventData.name;
     this.event_date = eventData.start ? eventData.start.local : eventData.event_date;
     this.summary = eventData.description ? eventData.description.text : eventData.summary;
+    if (this.summary.length > 10000) {
+      this.summary = `${this.summary.slice(0, 9997)}...`;
+    }
   }
 
   Event.prototype.save = function () {
@@ -241,7 +273,24 @@
     insertInto('yelps', this);
   };
 
+  function Trail(locationId, trailData) {
+    this.location_id = locationId;
+    this.name = trailData.name;
+    this.location = trailData.location;
+    this.length = trailData.length;
+    this.stars = trailData.stars;
+    this.star_votes = trailData.starVotes;
+    this.summary = trailData.summary;
+    this.trail_url = trailData.url;
+    this.conditions = `${trailData.conditionStatus}: ${trailData.conditionDetails}`;
+    const splitDate = trailData.conditionDate.split(' ');
+    this.condition_date = splitDate[0];
+    this.condition_time = splitDate[1];
+  }
 
+  Trail.prototype.save = function () {
+    insertInto('trails', this);
+  }
 
   function convertTime(timeInMilliseconds) {
     return new Date(timeInMilliseconds).toString().split(' ').slice(0, 4).join(' ');
@@ -266,8 +315,7 @@
     if (extra) {
       sql += ` ${extra}`;
     }
-    sql += ';';
-    console.log(sql);
+    sql = `${sql};`;
     if (onResults) {
       return client.query(sql, values).then(onResults);
     }
